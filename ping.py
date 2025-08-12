@@ -1,6 +1,5 @@
 from pygame import *
 from random import randint
-from time import sleep, time as timer
 
 mixer.init()
 main_win = display.set_mode((700, 500))
@@ -36,15 +35,18 @@ class GameSp(sprite.Sprite):
         main_win.blit(self.image, (self.rect.x, self.rect.y))
 
 class Player(GameSp):
-    def update(self):
+    def update_l(self):
         keypr = key.get_pressed()
-        if keypr[K_a] and self.rect.x > 5 or keypr[K_LEFT] and self.rect.y < 630:
+        if keypr[K_w] and self.rect.y > 5:
             self.rect.x -= self.p_speed
-        if keypr[K_d] and self.rect.x < 615 or keypr[K_RIGHT] and self.rect.y < 630:
+        if keypr[K_s] and self.rect.y < 630:
             self.rect.x += self.p_speed
-    def fire(self):
-        bullet = Bullet('bullet.png' , gun.rect.x,gun.rect.y, 6, 15,20)
-        bullets.add(bullet)
+    def update_r(self):
+        keypr = key.get_pressed()
+        if keypr[K_UP] and self.rect.y > 5:
+            self.rect.x -= self.p_speed
+        if keypr[K_DOWN] and self.rect.y < 630:
+            self.rect.x += self.p_speed
 
 
 class Enemy(GameSp):
@@ -80,9 +82,6 @@ FPS = 60
 clock = time.Clock()
 game = True
 fin = False
-num_fire = 7
-relo = False
-hp_p = 3
 while game:
     keys_pr = key.get_pressed()
     for i in event.get():
@@ -104,13 +103,8 @@ while game:
         gun.update()
         mons.update()
         mons.draw(main_win)
-        bullets.update()
-        bullets.draw(main_win)
         asts.update()
         asts.draw(main_win)
-
-        numa = font2.render('патронов: ' + str(num_fire), 1, (255, 255, 255))
-        main_win.blit(numa, (540, 20))
 
         if relo == True:
             now = timer()
@@ -121,18 +115,9 @@ while game:
                 num_fire = 7
                 relo = False
 
-        propuski = font2.render('пропущенно:' + str(lost), 1, (255, 255, 255))
-        main_win.blit(propuski, (10, 20))
-        ochki = font2.render('счет:' + str(score), 1, (255, 255, 255))
-        main_win.blit(ochki, (10, 50))
-        cols = sprite.groupcollide(mons, bullets, True, True)
-
         if sprite.spritecollide(gun, asts, False):
             hp_p -= 1
             sprite.spritecollide(gun, asts, True)
-
-        hp = font2.render('жизней: ' + str(hp_p), 1, (255, 255, 255))
-        main_win.blit(hp, (540, 50))
 
         for i in cols:
             score += 1
@@ -150,6 +135,3 @@ while game:
 
     display.update()
     clock.tick(FPS)
-
-
-    # sprite.spritecollide(gun, mons, False)
