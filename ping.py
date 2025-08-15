@@ -1,29 +1,9 @@
 from pygame import *
-from random import randint
 
-mixer.init()
 main_win = display.set_mode((700, 500))
-back = transform.scale(image.load('galaxy.jpg') , (700, 500))
+background_color = (100, 149, 237)
 
-mixer.music.load('flower.mp3')
-mixer.music.play(-1)
-mixer.music.set_volume(0.1)
-
-firee = mixer.Sound('fire.ogg')
-firee.set_volume(0.1)
-
-score = 0
-lost = 0
-
-font.init()
-font1 = font.Font(None, 70)
-winn = font1.render('YOU WIN!', True, (255, 215, 0))
-lose = font1.render('YOU LOSE!', True, (180, 0, 0))
-
-font.init()
-font2 = font.Font(None, 36)
-
-class GameSp(sprite.Sprite):
+class GameSprite(sprite.Sprite):
     def __init__(self, p_image, p_x, p_y, p_speed, size_x, size_y):
         sprite.Sprite.__init__(self)
         self.image = transform.scale(image.load(p_image), (size_x, size_y))
@@ -34,104 +14,64 @@ class GameSp(sprite.Sprite):
     def res(self):
         main_win.blit(self.image, (self.rect.x, self.rect.y))
 
-class Player(GameSp):
-    def update_l(self):
-        keypr = key.get_pressed()
-        if keypr[K_w] and self.rect.y > 5:
-            self.rect.x -= self.p_speed
-        if keypr[K_s] and self.rect.y < 630:
-            self.rect.x += self.p_speed
+font.init()
+font2 = font.Font(None, 36)
+
+class Player(GameSprite):
     def update_r(self):
         keypr = key.get_pressed()
-        if keypr[K_UP] and self.rect.y > 5:
-            self.rect.x -= self.p_speed
-        if keypr[K_DOWN] and self.rect.y < 630:
-            self.rect.x += self.p_speed
+        if keypr[K_w] and self.rect.y > 0:
+            self.rect.y -= self.p_speed
+        if keypr[K_s] and self.rect.y < 330:
+            self.rect.y += self.p_speed
+    def update_l(self):
+        keypr = key.get_pressed()
+        if keypr[K_UP] and self.rect.y > 0:
+            self.rect.y -= self.p_speed
+        if keypr[K_DOWN] and self.rect.y < 330:
+            self.rect.y += self.p_speed
 
+roc1 = Player('Rectangle1.png' , 20,250, 10, 30,170)
+roc2 = Player('Rectangle1.png' , 650,250, 10, 30,170)
+ball = GameSprite('Ellipse1.png' , 50,250, 10, 40,40)
 
-class Enemy(GameSp):
-    def update(self):
-        self.rect.y += self.p_speed
-        global lost
-        if self.rect.y > 650:
-            self.rect.y = -50
-            self.rect.x = randint(0,450)
-            lost += 1
-
-class Bullet(GameSp):
-    def update(self):
-        if self.rect.y < 0:
-            self.kill()
-        self.rect.y -= self.p_speed
-
-mons = sprite.Group()
-for i in range(5):
-    mon = Enemy('ufo.png' , randint(0,450),0, randint(1,4), 80,50)
-    mons.add(mon)
-
-asts = sprite.Group()
-for i in range(3):
-    ast = Enemy('asteroid.png' , randint(0,450),0, randint(1,5), 80,50)
-    asts.add(ast)
-
-gun = Player('rocket.png' , 350,400, 10, 80,100)
-
-bullets = sprite.Group()
+font.init()
+font1 = font.Font(None, 40)
+pl1 = font1.render('player 2 is the winner!', True, (255, 215, 0))
+pl2 = font1.render('player 1 is the winner!', True, (255, 215, 0))
 
 FPS = 60
 clock = time.Clock()
 game = True
 fin = False
+speedx = 4
+speedy = 4
 while game:
     keys_pr = key.get_pressed()
     for i in event.get():
         if i.type == QUIT:
             game = False
-        elif i.type == KEYDOWN:
-            if num_fire > 0:
-                if i.key == K_SPACE:
-                    gun.fire()
-                    firee.play()
-                    num_fire -= 1
-            elif num_fire <= 0 and relo == False:
-                relo = True
-                last = timer()
 
     if fin != True:
-        main_win.blit(back, (0,0))
-        gun.res()
-        gun.update()
-        mons.update()
-        mons.draw(main_win)
-        asts.update()
-        asts.draw(main_win)
-
-        if relo == True:
-            now = timer()
-            if now - last < 3:
-                wait = font2.render('идет перезарядка..', 1, (255, 255, 255))
-                main_win.blit(wait, (225, 350))
-            else:
-                num_fire = 7
-                relo = False
-
-        if sprite.spritecollide(gun, asts, False):
-            hp_p -= 1
-            sprite.spritecollide(gun, asts, True)
-
-        for i in cols:
-            score += 1
-            mon = Enemy('ufo.png' , randint(0,450),0, randint(2,4), 80,50)
-            mons.add(mon)
-
-        if lost >= 3 or hp_p <= 0:
-            sleep(0.01)
+        main_win.fill(background_color)
+        roc1.update_r()
+        roc2.update_l()
+        ball.rect.x += speedx
+        ball.rect.y += speedy
+        
+        if ball.rect.y > 450 or ball.rect.y < 0:
+            speedy *= -1
+        if sprite.collide_rect(roc1, ball) or sprite.collide_rect(roc2, ball):
+            speedx *= -1
+        if ball.rect.x <= 0:
+            main_win.blit(pl1, (200, 200))
             fin = True
-            main_win.blit(lose, (200, 200))
-        if score >= 10:
-            sleep(0.01)
+        if ball.rect.x >= 700:
+            main_win.blit(pl2, (200, 200))
             fin = True
-            main_win.blit(winn, (200, 200))
+        roc1.res()
+        roc2.res()
+        ball.res()
 
     display.update()
     clock.tick(FPS)
